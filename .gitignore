@@ -41,3 +41,6 @@ out/
 
 ### Mac OS ###
 .DS_Store
+
+# Ignorer les fichiers de configuration sensibles
+src/main/resources/application.properties
