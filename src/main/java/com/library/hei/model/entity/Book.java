@@ -2,51 +2,53 @@ package com.library.hei.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.Instant;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "book")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Builder
-@ToString
 public class Book {
 
   @Id
+  @Column(name = "id_book")
+  @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
 
   @Column(nullable = false)
   private String title;
 
+  @Column(unique = true)
+  private String isbn;
+
   @Column(nullable = false)
-  private String author;
+  private BigDecimal price;
 
-  @Column(name = "page_numbers")
-  private Integer pageNumbers;
+  // Relations
+  @ManyToMany
+  @JoinTable(
+      name = "book_genre",
+      joinColumns = @JoinColumn(name = "id_book"),
+      inverseJoinColumns = @JoinColumn(name = "id_genre"))
+  @Builder.Default
+  private List<Genre> genres = new ArrayList<>();
 
-  @Column
-  private String topic;
+  @ManyToMany
+  @JoinTable(
+      name = "book_author",
+      joinColumns = @JoinColumn(name = "id_book"),
+      inverseJoinColumns = @JoinColumn(name = "id_author"))
+  @Builder.Default
+  private List<Author> authors = new ArrayList<>();
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private BookFormat format;
+  @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<BookFormat> formats = new ArrayList<>();
 
-  @Column(name = "release_date")
-  private Instant releaseDate;
-
-  @Column(name = "creation_datetime", nullable = false, updatable = false)
-  private Instant creationDatetime;
-
-  @PrePersist
-  public void prePersist() {
-    if (creationDatetime == null) {
-      creationDatetime = Instant.now();
-    }
-  }
-
-  public enum BookFormat {
-    NOVEL, MANGA, COMIC, ROMANCE, THRILLER, FANTASY, SCIENCE_FICTION, BIOGRAPHY, HISTORY, OTHER
-  }
+  @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+  @Builder.Default
+  private List<Arrival> arrivals = new ArrayList<>();
 }

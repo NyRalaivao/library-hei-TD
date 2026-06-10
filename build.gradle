@@ -150,6 +150,7 @@ dependencies {
     testImplementation 'org.junit-pioneer:junit-pioneer:2.2.0'
     testImplementation 'com.h2database:h2:2.2.224'
     testImplementation 'org.mockito:mockito-core:5.8.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.8.0'
 
 
 

@@ -4,43 +4,40 @@ import com.library.hei.model.entity.Book;
 import com.library.hei.service.BookService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.Instant;
 import java.util.List;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("/books")
 public class BookController {
-
   private final BookService bookService;
 
-  @GetMapping("/books")
-  public List<Book> getBooks(
+  @GetMapping
+  public List<Book> getAll(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int pageSize,
-      @RequestParam(required = false) String titlePrefix,
-      @RequestParam(required = false) Instant createdBefore,
-      @RequestParam(required = false) Instant createdAfter) {
-    return bookService.getBooks(page, pageSize, titlePrefix, createdBefore, createdAfter);
+      @RequestParam(required = false) String titlePrefix) {
+    if (titlePrefix != null) return bookService.searchByTitle(titlePrefix, page, pageSize);
+    return bookService.getAll(page, pageSize);
   }
 
-  @GetMapping("/books/{id}")
-  public Book getBookById(@PathVariable String id) {
-    return bookService.getBookById(id);
+  @GetMapping("/{id}")
+  public Book getById(@PathVariable String id) {
+    return bookService.getById(id);
   }
 
-  @PutMapping("/books/{id}")
-  public Book crupdateBook(@PathVariable String id, @RequestBody Book book) {
-    return bookService.crupdateBook(id, book);
+  @GetMapping("/isbn/{isbn}")
+  public Book getByIsbn(@PathVariable String isbn) {
+    return bookService.getByIsbn(isbn);
   }
 
-  @PostMapping("/books/{id}/copy")
-  public Book importBook(@PathVariable String id) {
-    return bookService.importBook(id);
+  @PutMapping("/{id}")
+  public Book crupdate(@PathVariable String id, @RequestBody Book book) {
+    return bookService.crupdate(id, book);
   }
 
-  @DeleteMapping("/books/{id}")
-  public Book deleteBook(@PathVariable String id) {
-    return bookService.deleteBook(id);
+  @DeleteMapping("/{id}")
+  public Book delete(@PathVariable String id) {
+    return bookService.delete(id);
   }
 }
