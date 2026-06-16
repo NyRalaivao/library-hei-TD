@@ -1,7 +1,16 @@
 package com.library.hei.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.library.hei.model.entity.*;
 import com.library.hei.repository.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,16 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTest {
 
@@ -27,8 +26,7 @@ class DashboardServiceTest {
   @Mock private SaleDetailRepository saleDetailRepository;
   @Mock private BookFormatRepository bookFormatRepository;
 
-  @InjectMocks
-  private DashboardService dashboardService;
+  @InjectMocks private DashboardService dashboardService;
 
   private Sale doneSale;
   private Sale pendingSale;
@@ -40,30 +38,46 @@ class DashboardServiceTest {
   void setUp() {
     book = Book.builder().id("book-1").title("Les Misérables").price(BigDecimal.TEN).build();
 
-    lowStockFormat = BookFormat.builder()
-            .id("fmt-1").book(book)
+    lowStockFormat =
+        BookFormat.builder()
+            .id("fmt-1")
+            .book(book)
             .coverType(BookFormat.CoverType.POCKET)
-            .price(new BigDecimal("9.90")).stock(2).build();
+            .price(new BigDecimal("9.90"))
+            .stock(2)
+            .build();
 
-    okStockFormat = BookFormat.builder()
-            .id("fmt-2").book(book)
+    okStockFormat =
+        BookFormat.builder()
+            .id("fmt-2")
+            .book(book)
             .coverType(BookFormat.CoverType.MEDIUM)
-            .price(new BigDecimal("12.50")).stock(15).build();
+            .price(new BigDecimal("12.50"))
+            .stock(15)
+            .build();
 
     Customer customer = Customer.builder().id("c-1").firstName("Marie").lastName("Curie").build();
     User seller = User.builder().id("u-1").username("seller").role(User.UserRole.SELLER).build();
 
-    doneSale = Sale.builder()
-            .id("sale-done").customer(customer).seller(seller)
+    doneSale =
+        Sale.builder()
+            .id("sale-done")
+            .customer(customer)
+            .seller(seller)
             .saleDate(LocalDateTime.now())
             .status(Sale.SaleStatus.DONE)
-            .totalAmount(new BigDecimal("25.00")).build();
+            .totalAmount(new BigDecimal("25.00"))
+            .build();
 
-    pendingSale = Sale.builder()
-            .id("sale-pending").customer(customer).seller(seller)
+    pendingSale =
+        Sale.builder()
+            .id("sale-pending")
+            .customer(customer)
+            .seller(seller)
             .saleDate(LocalDateTime.now())
             .status(Sale.SaleStatus.PENDING)
-            .totalAmount(new BigDecimal("12.50")).build();
+            .totalAmount(new BigDecimal("12.50"))
+            .build();
   }
 
   // ─── getCurrentMonthRevenue ───────────────────────────────────────────────
@@ -91,8 +105,7 @@ class DashboardServiceTest {
 
   @Test
   void getPendingSales_returnsOnlyPending() {
-    when(saleRepository.findByStatus(Sale.SaleStatus.PENDING))
-            .thenReturn(List.of(pendingSale));
+    when(saleRepository.findByStatus(Sale.SaleStatus.PENDING)).thenReturn(List.of(pendingSale));
 
     List<Sale> result = dashboardService.getPendingSales();
 
@@ -112,7 +125,7 @@ class DashboardServiceTest {
   void getRecentSales_returnsOnlyDone() {
     when(saleRepository.findByStatusOrderBySaleDateDesc(
             eq(Sale.SaleStatus.DONE), any(PageRequest.class)))
-            .thenReturn(List.of(doneSale));
+        .thenReturn(List.of(doneSale));
 
     List<Sale> result = dashboardService.getRecentSales(10);
 
@@ -124,8 +137,7 @@ class DashboardServiceTest {
 
   @Test
   void getLowStockBooks_returnsOnlyBelowThreshold() {
-    when(bookFormatRepository.findByStockLessThanEqual(3))
-            .thenReturn(List.of(lowStockFormat));
+    when(bookFormatRepository.findByStockLessThanEqual(3)).thenReturn(List.of(lowStockFormat));
 
     List<Map<String, Object>> result = dashboardService.getLowStockBooks(3);
 
@@ -153,9 +165,9 @@ class DashboardServiceTest {
 
   @Test
   void getBestSellers_returnsRankedList() {
-    Object[] row = new Object[]{book, 42L};
+    Object[] row = new Object[] {book, 42L};
     when(saleDetailRepository.findBestSellers(any(PageRequest.class)))
-            .thenReturn(Collections.singletonList(row));
+        .thenReturn(Collections.singletonList(row));
 
     List<Map<String, Object>> result = dashboardService.getBestSellers(5);
 
@@ -174,7 +186,7 @@ class DashboardServiceTest {
 
   @Test
   void getRevenueByGenre_returnsGenreRevenuePairs() {
-    Object[] row = new Object[]{"Roman", new BigDecimal("850.00")};
+    Object[] row = new Object[] {"Roman", new BigDecimal("850.00")};
     when(saleDetailRepository.findRevenueByGenre()).thenReturn(Collections.singletonList(row));
 
     List<Map<String, Object>> result = dashboardService.getRevenueByGenre();
