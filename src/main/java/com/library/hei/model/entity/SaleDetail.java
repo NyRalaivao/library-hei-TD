@@ -1,5 +1,6 @@
 package com.library.hei.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -17,10 +18,12 @@ public class SaleDetail {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "id_sale", nullable = false)
+  @JsonIgnoreProperties({"saleDetails", "payment", "hibernateLazyInitializer", "handler"})
   private Sale sale;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "id_format", nullable = false)
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private BookFormat bookFormat;
 
   @Column(nullable = false)

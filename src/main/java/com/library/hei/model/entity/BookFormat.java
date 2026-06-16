@@ -1,5 +1,6 @@
 package com.library.hei.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -17,6 +18,7 @@ public class BookFormat {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "id_book", nullable = false)
+  @JsonIgnoreProperties({"formats", "arrivals", "hibernateLazyInitializer", "handler"})
   private Book book;
 
   @Enumerated(EnumType.STRING)

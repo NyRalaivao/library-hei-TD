@@ -1,5 +1,6 @@
 package com.library.hei.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ public class Author {
   @Column(name = "last_name", nullable = false)
   private String lastName;
 
+  @JsonIgnore
   @ManyToMany(mappedBy = "authors")
   @Builder.Default
   private List<Book> books = new ArrayList<>();

@@ -1,5 +1,6 @@
 package com.library.hei.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -20,10 +21,12 @@ public class Sale {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "id_customer", nullable = false)
+  @JsonIgnoreProperties({"sales", "hibernateLazyInitializer", "handler"})
   private Customer customer;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "id_user", nullable = false)
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private User seller;
 
   @Column(name = "sale_date", nullable = false)
@@ -39,9 +42,11 @@ public class Sale {
 
   @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
+  @JsonIgnoreProperties("sale")
   private List<SaleDetail> saleDetails = new ArrayList<>();
 
   @OneToOne(mappedBy = "sale", cascade = CascadeType.ALL)
+  @JsonIgnoreProperties("sale")
   private Payment payment;
 
   @PrePersist

@@ -1,5 +1,6 @@
 package com.library.hei.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -46,9 +47,11 @@ public class Book {
 
   @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
+  @JsonIgnore
   private List<BookFormat> formats = new ArrayList<>();
 
   @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
   @Builder.Default
+  @JsonIgnore
   private List<Arrival> arrivals = new ArrayList<>();
 }

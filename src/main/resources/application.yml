@@ -2,7 +2,7 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/library_db}
     username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:password}
+    password: ${DATABASE_PASSWORD:azerty}
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 30000
@@ -21,3 +21,11 @@ spring:
 
 server:
   port: 8080
+
+# AWS configuration (overridden in deployment via env vars)
+aws:
+  region: ${AWS_REGION:eu-west-3}
+  ses:
+    source: ${AWS_SES_SOURCE:no-reply@example.com}
+  s3:
+    bucket: ${AWS_S3_BUCKET:dummy-bucket}
