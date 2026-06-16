@@ -2,14 +2,16 @@ package com.library.hei.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.*;
 
 @Entity
 @Table(name = "genre")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Genre {
 
@@ -20,8 +22,7 @@ public class Genre {
   @Column(nullable = false, unique = true)
   private String name;
 
-  @Column
-  private String description;
+  @Column private String description;
 
   @JsonIgnore
   @ManyToMany(mappedBy = "genres")

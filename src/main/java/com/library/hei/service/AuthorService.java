@@ -4,19 +4,22 @@ import com.library.hei.model.entity.Author;
 import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.NotFoundException;
 import com.library.hei.repository.AuthorRepository;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class AuthorService {
   private final AuthorRepository authorRepository;
 
-  public List<Author> getAll() { return authorRepository.findAll(); }
+  public List<Author> getAll() {
+    return authorRepository.findAll();
+  }
 
   public Author getById(String id) {
-    return authorRepository.findById(id)
+    return authorRepository
+        .findById(id)
         .orElseThrow(() -> new NotFoundException("Auteur id=" + id + " introuvable"));
   }
 

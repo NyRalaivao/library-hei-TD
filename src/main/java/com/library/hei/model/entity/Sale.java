@@ -2,16 +2,18 @@ package com.library.hei.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.*;
 
 @Entity
 @Table(name = "sale")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Sale {
 
@@ -56,6 +58,8 @@ public class Sale {
   }
 
   public enum SaleStatus {
-    PENDING, DONE, CANCELLED
+    PENDING,
+    DONE,
+    CANCELLED
   }
 }

@@ -5,8 +5,10 @@ import lombok.*;
 
 @Entity
 @Table(name = "library")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Library {
 
@@ -17,6 +19,5 @@ public class Library {
   @Column(nullable = false)
   private String name;
 
-  @Column
-  private String address;
+  @Column private String address;
 }

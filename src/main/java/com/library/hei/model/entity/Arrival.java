@@ -2,13 +2,15 @@ package com.library.hei.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDate;
+import lombok.*;
 
 @Entity
 @Table(name = "arrival")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Arrival {
 
@@ -18,7 +20,14 @@ public class Arrival {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "id_book", nullable = false)
-  @JsonIgnoreProperties({"arrivals", "formats", "genres", "authors", "hibernateLazyInitializer", "handler"})
+  @JsonIgnoreProperties({
+    "arrivals",
+    "formats",
+    "genres",
+    "authors",
+    "hibernateLazyInitializer",
+    "handler"
+  })
   private Book book;
 
   @ManyToOne(fetch = FetchType.LAZY)

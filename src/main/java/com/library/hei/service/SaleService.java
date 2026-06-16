@@ -5,15 +5,14 @@ import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.InsufficientStockException;
 import com.library.hei.model.exception.NotFoundException;
 import com.library.hei.repository.*;
-import lombok.AllArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -34,7 +33,8 @@ public class SaleService {
   }
 
   public Sale getById(String id) {
-    return saleRepository.findById(id)
+    return saleRepository
+        .findById(id)
         .orElseThrow(() -> new NotFoundException("Vente id=" + id + " introuvable"));
   }
 
@@ -44,32 +44,41 @@ public class SaleService {
 
   @Transactional
   public Sale createSale(String customerId, String sellerId, List<SaleItemRequest> items) {
-    Customer customer = customerRepository.findById(customerId)
-        .orElseThrow(() -> new NotFoundException("Client id=" + customerId + " introuvable"));
-    User seller = userRepository.findById(sellerId)
-        .orElseThrow(() -> new NotFoundException("Vendeur id=" + sellerId + " introuvable"));
+    Customer customer =
+        customerRepository
+            .findById(customerId)
+            .orElseThrow(() -> new NotFoundException("Client id=" + customerId + " introuvable"));
+    User seller =
+        userRepository
+            .findById(sellerId)
+            .orElseThrow(() -> new NotFoundException("Vendeur id=" + sellerId + " introuvable"));
 
-    Sale sale = Sale.builder()
-        .customer(customer)
-        .seller(seller)
-        .saleDate(LocalDateTime.now())
-        .status(Sale.SaleStatus.PENDING)
-        .totalAmount(BigDecimal.ZERO)
-        .saleDetails(new ArrayList<>())
-        .build();
+    Sale sale =
+        Sale.builder()
+            .customer(customer)
+            .seller(seller)
+            .saleDate(LocalDateTime.now())
+            .status(Sale.SaleStatus.PENDING)
+            .totalAmount(BigDecimal.ZERO)
+            .saleDetails(new ArrayList<>())
+            .build();
 
     BigDecimal total = BigDecimal.ZERO;
     for (SaleItemRequest item : items) {
-      BookFormat format = bookFormatRepository.findById(item.getFormatId())
-          .orElseThrow(() -> new NotFoundException("Format id=" + item.getFormatId() + " introuvable"));
+      BookFormat format =
+          bookFormatRepository
+              .findById(item.getFormatId())
+              .orElseThrow(
+                  () -> new NotFoundException("Format id=" + item.getFormatId() + " introuvable"));
 
-      SaleDetail detail = SaleDetail.builder()
-          .sale(sale)
-          .bookFormat(format)
-          .quantity(item.getQuantity())
-          .unitPrice(format.getPrice())
-          .totalPrice(format.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-          .build();
+      SaleDetail detail =
+          SaleDetail.builder()
+              .sale(sale)
+              .bookFormat(format)
+              .quantity(item.getQuantity())
+              .unitPrice(format.getPrice())
+              .totalPrice(format.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+              .build();
 
       sale.getSaleDetails().add(detail);
       total = total.add(detail.getTotalPrice());
@@ -93,8 +102,7 @@ public class SaleService {
       int requested = detail.getQuantity();
 
       if (available < requested) {
-        throw new InsufficientStockException(
-            format.getBook().getTitle(), requested, available);
+        throw new InsufficientStockException(format.getBook().getTitle(), requested, available);
       }
       format.setStock(available - requested);
       bookFormatRepository.save(format);
@@ -116,7 +124,12 @@ public class SaleService {
 
   // DTO interne pour la création
   public record SaleItemRequest(String formatId, int quantity) {
-    public String getFormatId() { return formatId; }
-    public int getQuantity() { return quantity; }
+    public String getFormatId() {
+      return formatId;
+    }
+
+    public int getQuantity() {
+      return quantity;
+    }
   }
 }

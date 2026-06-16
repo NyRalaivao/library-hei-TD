@@ -1,12 +1,18 @@
 package com.library.hei.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.library.hei.model.entity.Book;
-import com.library.hei.model.entity.BookFormat;
 import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.NotFoundException;
 import com.library.hei.repository.AuthorRepository;
 import com.library.hei.repository.BookRepository;
 import com.library.hei.repository.GenreRepository;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,14 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class BookServiceTest {
 
@@ -32,19 +30,19 @@ class BookServiceTest {
   @Mock private GenreRepository genreRepository;
   @Mock private AuthorRepository authorRepository;
 
-  @InjectMocks
-  private BookService bookService;
+  @InjectMocks private BookService bookService;
 
   private Book book;
 
   @BeforeEach
   void setUp() {
-    book = Book.builder()
-        .id("book-1")
-        .title("Les Misérables")
-        .isbn("9782070360024")
-        .price(new BigDecimal("12.50"))
-        .build();
+    book =
+        Book.builder()
+            .id("book-1")
+            .title("Les Misérables")
+            .isbn("9782070360024")
+            .price(new BigDecimal("12.50"))
+            .build();
   }
 
   // ─── getAll ───────────────────────────────────────────────────────────────

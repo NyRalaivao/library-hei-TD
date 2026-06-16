@@ -4,19 +4,22 @@ import com.library.hei.model.entity.Customer;
 import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.NotFoundException;
 import com.library.hei.repository.CustomerRepository;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class CustomerService {
   private final CustomerRepository customerRepository;
 
-  public List<Customer> getAll() { return customerRepository.findAll(); }
+  public List<Customer> getAll() {
+    return customerRepository.findAll();
+  }
 
   public Customer getById(String id) {
-    return customerRepository.findById(id)
+    return customerRepository
+        .findById(id)
         .orElseThrow(() -> new NotFoundException("Client id=" + id + " introuvable"));
   }
 

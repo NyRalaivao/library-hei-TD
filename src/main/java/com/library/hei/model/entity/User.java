@@ -5,8 +5,10 @@ import lombok.*;
 
 @Entity
 @Table(name = "app_user")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class User {
 
@@ -22,6 +24,7 @@ public class User {
   private UserRole role;
 
   public enum UserRole {
-    ADMIN, SELLER
+    ADMIN,
+    SELLER
   }
 }

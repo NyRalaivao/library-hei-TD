@@ -2,13 +2,15 @@ package com.library.hei.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.*;
 import java.math.BigDecimal;
+import lombok.*;
 
 @Entity
 @Table(name = "book_format")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class BookFormat {
 
@@ -32,6 +34,11 @@ public class BookFormat {
   private Integer stock;
 
   public enum CoverType {
-    POCKET, SMALL, MEDIUM, LARGE, HARDCOVER, PAPERBACK
+    POCKET,
+    SMALL,
+    MEDIUM,
+    LARGE,
+    HARDCOVER,
+    PAPERBACK
   }
 }

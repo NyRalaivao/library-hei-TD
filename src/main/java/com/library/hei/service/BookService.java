@@ -4,12 +4,11 @@ import com.library.hei.model.entity.*;
 import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.NotFoundException;
 import com.library.hei.repository.*;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -24,12 +23,14 @@ public class BookService {
   }
 
   public Book getById(String id) {
-    return bookRepository.findById(id)
+    return bookRepository
+        .findById(id)
         .orElseThrow(() -> new NotFoundException("Livre id=" + id + " introuvable"));
   }
 
   public Book getByIsbn(String isbn) {
-    return bookRepository.findByIsbn(isbn)
+    return bookRepository
+        .findByIsbn(isbn)
         .orElseThrow(() -> new NotFoundException("Livre ISBN=" + isbn + " introuvable"));
   }
 

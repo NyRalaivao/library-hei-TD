@@ -4,19 +4,22 @@ import com.library.hei.model.entity.User;
 import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.NotFoundException;
 import com.library.hei.repository.UserRepository;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class UserService {
   private final UserRepository userRepository;
 
-  public List<User> getAll() { return userRepository.findAll(); }
+  public List<User> getAll() {
+    return userRepository.findAll();
+  }
 
   public User getById(String id) {
-    return userRepository.findById(id)
+    return userRepository
+        .findById(id)
         .orElseThrow(() -> new NotFoundException("Utilisateur id=" + id + " introuvable"));
   }
 

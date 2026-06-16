@@ -2,11 +2,11 @@ package com.library.hei.endpoint.rest.controller.dashboard;
 
 import com.library.hei.model.entity.Sale;
 import com.library.hei.service.DashboardService;
-import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @AllArgsConstructor
@@ -37,8 +37,7 @@ public class DashboardController {
   }
 
   @GetMapping("/books/best-sellers")
-  public List<Map<String, Object>> getBestSellers(
-      @RequestParam(defaultValue = "10") int limit) {
+  public List<Map<String, Object>> getBestSellers(@RequestParam(defaultValue = "10") int limit) {
     return dashboardService.getBestSellers(limit);
   }
 

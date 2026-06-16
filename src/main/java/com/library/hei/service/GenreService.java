@@ -4,19 +4,22 @@ import com.library.hei.model.entity.Genre;
 import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.NotFoundException;
 import com.library.hei.repository.GenreRepository;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class GenreService {
   private final GenreRepository genreRepository;
 
-  public List<Genre> getAll() { return genreRepository.findAll(); }
+  public List<Genre> getAll() {
+    return genreRepository.findAll();
+  }
 
   public Genre getById(String id) {
-    return genreRepository.findById(id)
+    return genreRepository
+        .findById(id)
         .orElseThrow(() -> new NotFoundException("Genre id=" + id + " introuvable"));
   }
 
