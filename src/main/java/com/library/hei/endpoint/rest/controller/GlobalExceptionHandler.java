@@ -3,34 +3,64 @@ package com.library.hei.endpoint.rest.controller;
 import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.InsufficientStockException;
 import com.library.hei.model.exception.NotFoundException;
-import java.util.Map;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
+import java.time.Instant;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
   @ExceptionHandler(NotFoundException.class)
-  @ResponseStatus(HttpStatus.NOT_FOUND)
-  public Map<String, String> handleNotFound(NotFoundException e) {
-    return Map.of("error", e.getMessage(), "type", "NOT_FOUND");
+  public ResponseEntity<ExceptionBody> handleNotFound(
+      NotFoundException exception, HttpServletRequest request) {
+
+    return ResponseEntity.status(404)
+        .body(
+            new ExceptionBody(
+                404, "NOT_FOUND", exception.getMessage(), request.getRequestURI(), Instant.now()));
   }
 
   @ExceptionHandler(BadRequestException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public Map<String, String> handleBadRequest(BadRequestException e) {
-    return Map.of("error", e.getMessage(), "type", "BAD_REQUEST");
+  public ResponseEntity<ExceptionBody> handleBadRequest(
+      BadRequestException exception, HttpServletRequest request) {
+
+    return ResponseEntity.badRequest()
+        .body(
+            new ExceptionBody(
+                400,
+                "BAD_REQUEST",
+                exception.getMessage(),
+                request.getRequestURI(),
+                Instant.now()));
   }
 
   @ExceptionHandler(InsufficientStockException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public Map<String, String> handleInsufficientStock(InsufficientStockException e) {
-    return Map.of("error", e.getMessage(), "type", "INSUFFICIENT_STOCK");
+  public ResponseEntity<ExceptionBody> handleInsufficientStock(
+      InsufficientStockException exception, HttpServletRequest request) {
+
+    return ResponseEntity.badRequest()
+        .body(
+            new ExceptionBody(
+                400,
+                "INSUFFICIENT_STOCK",
+                exception.getMessage(),
+                request.getRequestURI(),
+                Instant.now()));
   }
 
   @ExceptionHandler(Exception.class)
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public Map<String, String> handleGeneric(Exception e) {
-    return Map.of("error", e.getMessage(), "type", "INTERNAL_ERROR");
+  public ResponseEntity<ExceptionBody> handleException(
+      Exception exception, HttpServletRequest request) {
+
+    return ResponseEntity.status(500)
+        .body(
+            new ExceptionBody(
+                500,
+                "INTERNAL_SERVER_ERROR",
+                exception.getMessage(),
+                request.getRequestURI(),
+                Instant.now()));
   }
 }
