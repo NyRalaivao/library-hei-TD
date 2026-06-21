@@ -33,6 +33,8 @@ class UserServiceTest {
     admin = User.builder().id("user-2").username("bob").role(User.UserRole.ADMIN).build();
   }
 
+  // ─── getAll ───────────────────────────────────────────────────────────────
+
   @Test
   void getAll_returnsAllUsers() {
     when(userRepository.findAll()).thenReturn(List.of(seller, admin));
@@ -50,6 +52,8 @@ class UserServiceTest {
     assertTrue(userService.getAll().isEmpty());
   }
 
+  // ─── getById ──────────────────────────────────────────────────────────────
+
   @Test
   void getById_found() {
     when(userRepository.findById("user-1")).thenReturn(Optional.of(seller));
@@ -66,6 +70,8 @@ class UserServiceTest {
 
     assertThrows(NotFoundException.class, () -> userService.getById("unknown"));
   }
+
+  // ─── crupdate ─────────────────────────────────────────────────────────────
 
   @Test
   void crupdate_validUser_savesAndReturns() {
@@ -110,6 +116,8 @@ class UserServiceTest {
     assertThrows(BadRequestException.class, () -> userService.crupdate("user-1", invalid));
     verify(userRepository, never()).save(any());
   }
+
+  // ─── delete ───────────────────────────────────────────────────────────────
 
   @Test
   void delete_existingUser_deletesAndReturns() {
