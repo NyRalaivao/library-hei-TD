@@ -1,11 +1,13 @@
 package com.library.hei.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.library.hei.model.entity.Arrival;
 import com.library.hei.model.entity.Book;
 import com.library.hei.model.entity.BookFormat;
+import com.library.hei.model.entity.StockMovement;
 import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.NotFoundException;
 import com.library.hei.repository.ArrivalRepository;
@@ -27,6 +29,9 @@ class ArrivalServiceTest {
   @Mock private ArrivalRepository arrivalRepository;
   @Mock private BookRepository bookRepository;
   @Mock private BookFormatRepository bookFormatRepository;
+  // NOUVEAU : on mocke StockMovementService pour vérifier qu'il est appelé
+  // sans avoir besoin qu'il fasse vraiment la persistance
+  @Mock private StockMovementService stockMovementService;
 
   @InjectMocks private ArrivalService arrivalService;
 
@@ -37,9 +42,7 @@ class ArrivalServiceTest {
   @BeforeEach
   void setUp() {
     book = Book.builder().id("book-1").title("Clean Code").build();
-
     format = BookFormat.builder().id("format-1").book(book).stock(10).build();
-
     arrival = Arrival.builder().book(book).arrivalDate(LocalDate.now()).quantity(5).build();
   }
 
@@ -73,10 +76,28 @@ class ArrivalServiceTest {
     Arrival result = arrivalService.createArrival(arrival, "format-1");
 
     assertNotNull(result);
-    assertEquals(15, format.getStock());
-
+    assertEquals(15, format.getStock()); // 10 + 5
     verify(bookFormatRepository).save(format);
     verify(arrivalRepository).save(arrival);
+  }
+
+  // NOUVEAU : vérifie que le mouvement de stock est bien enregistré lors d'un arrivage
+  @Test
+  void createArrival_recordsStockMovementOfTypeArrival() {
+    when(bookRepository.findById("book-1")).thenReturn(Optional.of(book));
+    when(bookFormatRepository.findById("format-1")).thenReturn(Optional.of(format));
+    when(arrivalRepository.save(arrival)).thenReturn(arrival);
+
+    arrivalService.createArrival(arrival, "format-1");
+
+    // On vérifie que record() a été appelé avec les bons paramètres
+    verify(stockMovementService)
+        .record(
+            eq(format),
+            eq(StockMovement.MovementType.ARRIVAL), // type correct
+            eq(5), // quantité positive (entrée de stock)
+            any() // referenceId = id de l'arrivage sauvé
+            );
   }
 
   @Test
@@ -87,6 +108,8 @@ class ArrivalServiceTest {
         BadRequestException.class, () -> arrivalService.createArrival(arrival, "format-1"));
 
     verify(arrivalRepository, never()).save(any());
+    // Aucun mouvement de stock ne doit être créé en cas d'erreur
+    verify(stockMovementService, never()).record(any(), any(), anyInt(), any());
   }
 
   @Test
@@ -97,6 +120,7 @@ class ArrivalServiceTest {
         BadRequestException.class, () -> arrivalService.createArrival(arrival, "format-1"));
 
     verify(arrivalRepository, never()).save(any());
+    verify(stockMovementService, never()).record(any(), any(), anyInt(), any());
   }
 
   @Test
@@ -106,6 +130,7 @@ class ArrivalServiceTest {
     assertThrows(NotFoundException.class, () -> arrivalService.createArrival(arrival, "format-1"));
 
     verify(arrivalRepository, never()).save(any());
+    verify(stockMovementService, never()).record(any(), any(), anyInt(), any());
   }
 
   @Test
@@ -116,5 +141,6 @@ class ArrivalServiceTest {
     assertThrows(NotFoundException.class, () -> arrivalService.createArrival(arrival, "format-1"));
 
     verify(arrivalRepository, never()).save(any());
+    verify(stockMovementService, never()).record(any(), any(), anyInt(), any());
   }
 }

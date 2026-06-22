@@ -2,6 +2,7 @@ package com.library.hei.service;
 
 import com.library.hei.model.entity.Arrival;
 import com.library.hei.model.entity.BookFormat;
+import com.library.hei.model.entity.StockMovement;
 import com.library.hei.model.exception.BadRequestException;
 import com.library.hei.model.exception.NotFoundException;
 import com.library.hei.repository.ArrivalRepository;
@@ -19,6 +20,8 @@ public class ArrivalService {
   private final ArrivalRepository arrivalRepository;
   private final BookRepository bookRepository;
   private final BookFormatRepository bookFormatRepository;
+  // NOUVEAU : injection du service de mouvements de stock
+  private final StockMovementService stockMovementService;
 
   public List<Arrival> getAll() {
     return arrivalRepository.findAll();
@@ -39,14 +42,28 @@ public class ArrivalService {
             .orElseThrow(() -> new NotFoundException("Livre introuvable"));
     arrival.setBook(book);
 
-    // Incrémenter le stock du format concerné
     BookFormat format =
         bookFormatRepository
             .findById(formatId)
             .orElseThrow(() -> new NotFoundException("Format id=" + formatId + " introuvable"));
+
+    // Incrémenter le stock du format concerné (comportement inchangé)
     format.setStock(format.getStock() + arrival.getQuantity());
     bookFormatRepository.save(format);
 
-    return arrivalRepository.save(arrival);
+    // Sauvegarder l'arrivage en premier pour obtenir son ID généré
+    Arrival saved = arrivalRepository.save(arrival);
+
+    // NOUVEAU : enregistrer le mouvement de stock
+    // quantity POSITIVE = entrée de stock
+    // referenceId = id de cet arrivage, pour pouvoir retracer l'origine
+    stockMovementService.record(
+        format,
+        StockMovement.MovementType.ARRIVAL,
+        arrival.getQuantity(), // ex: +5
+        saved.getId() // lien vers cet arrivage
+        );
+
+    return saved;
   }
 }

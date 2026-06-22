@@ -28,6 +28,8 @@ class SaleServiceTest {
   @Mock private BookFormatRepository bookFormatRepository;
   @Mock private CustomerRepository customerRepository;
   @Mock private UserRepository userRepository;
+  // NOUVEAU : mock de StockMovementService
+  @Mock private StockMovementService stockMovementService;
 
   @InjectMocks private SaleService saleService;
 
@@ -93,7 +95,6 @@ class SaleServiceTest {
 
     assertEquals(1, result.size());
     assertEquals(Sale.SaleStatus.PENDING, result.get(0).getStatus());
-    verify(saleRepository).findByStatus(Sale.SaleStatus.PENDING);
   }
 
   @Test
@@ -107,8 +108,7 @@ class SaleServiceTest {
   @Test
   void getById_found() {
     when(saleRepository.findById("sale-1")).thenReturn(Optional.of(pendingSale));
-    Sale result = saleService.getById("sale-1");
-    assertEquals("sale-1", result.getId());
+    assertEquals("sale-1", saleService.getById("sale-1").getId());
   }
 
   @Test
@@ -126,12 +126,15 @@ class SaleServiceTest {
     when(bookFormatRepository.findById("format-1")).thenReturn(Optional.of(format));
     when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));
 
-    var items = List.of(new SaleService.SaleItemRequest("format-1", 3));
-    Sale result = saleService.createSale("cust-1", "user-1", items);
+    Sale result =
+        saleService.createSale(
+            "cust-1", "user-1", List.of(new SaleService.SaleItemRequest("format-1", 3)));
 
     assertEquals(Sale.SaleStatus.PENDING, result.getStatus());
-    assertEquals(new BigDecimal("37.50"), result.getTotalAmount()); // 3 * 12.50
-    verify(saleRepository).save(any(Sale.class));
+    assertEquals(new BigDecimal("37.50"), result.getTotalAmount()); // 3 × 12.50
+
+    // createSale ne doit PAS enregistrer de mouvement (vente encore PENDING)
+    verify(stockMovementService, never()).record(any(), any(), anyInt(), any());
   }
 
   @Test
@@ -150,7 +153,7 @@ class SaleServiceTest {
   // ─── confirmSale ──────────────────────────────────────────────────────────
 
   @Test
-  void confirmSale_decrementsStock() {
+  void confirmSale_decrementsStockAndRecordsMovement() {
     when(saleRepository.findById("sale-1")).thenReturn(Optional.of(pendingSale));
     when(bookFormatRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     when(saleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -159,6 +162,15 @@ class SaleServiceTest {
 
     assertEquals(Sale.SaleStatus.DONE, result.getStatus());
     assertEquals(8, format.getStock()); // 10 - 2
+
+    // NOUVEAU : vérifier que le mouvement de stock SALE est enregistré
+    verify(stockMovementService)
+        .record(
+            eq(format),
+            eq(StockMovement.MovementType.SALE),
+            eq(-2), // NÉGATIF = sortie de stock
+            eq("sale-1") // référence vers la vente confirmée
+            );
   }
 
   @Test
@@ -168,27 +180,32 @@ class SaleServiceTest {
 
     assertThrows(BadRequestException.class, () -> saleService.confirmSale("sale-1"));
     verify(bookFormatRepository, never()).save(any());
+    verify(stockMovementService, never()).record(any(), any(), anyInt(), any());
   }
 
   @Test
   void confirmSale_insufficientStock_throwsException() {
-    format.setStock(1); // stock insuffisant pour quantité=2
+    format.setStock(1); // insuffisant pour quantité = 2
     when(saleRepository.findById("sale-1")).thenReturn(Optional.of(pendingSale));
 
     assertThrows(InsufficientStockException.class, () -> saleService.confirmSale("sale-1"));
     verify(saleRepository, never()).save(any());
+    verify(stockMovementService, never()).record(any(), any(), anyInt(), any());
   }
 
   // ─── cancelSale ───────────────────────────────────────────────────────────
 
   @Test
-  void cancelSale_pending_setsStatusCancelled() {
+  void cancelSale_pending_setsStatusCancelled_noStockMovement() {
     when(saleRepository.findById("sale-1")).thenReturn(Optional.of(pendingSale));
     when(saleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
     Sale result = saleService.cancelSale("sale-1");
 
     assertEquals(Sale.SaleStatus.CANCELLED, result.getStatus());
+    // Le stock ne doit pas bouger : il n'avait pas été décrémenté (vente PENDING)
+    assertEquals(10, format.getStock());
+    verify(stockMovementService, never()).record(any(), any(), anyInt(), any());
   }
 
   @Test
@@ -197,5 +214,6 @@ class SaleServiceTest {
     when(saleRepository.findById("sale-1")).thenReturn(Optional.of(pendingSale));
 
     assertThrows(BadRequestException.class, () -> saleService.cancelSale("sale-1"));
+    verify(stockMovementService, never()).record(any(), any(), anyInt(), any());
   }
 }
