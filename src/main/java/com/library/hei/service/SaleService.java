@@ -22,6 +22,7 @@ public class SaleService {
   private final BookFormatRepository bookFormatRepository;
   private final CustomerRepository customerRepository;
   private final UserRepository userRepository;
+  private final StockMovementService stockMovementService;
 
   public List<Sale> getPendingSales() {
     return saleRepository.findByStatus(Sale.SaleStatus.PENDING);
@@ -94,8 +95,6 @@ public class SaleService {
     if (sale.getStatus() != Sale.SaleStatus.PENDING) {
       throw new BadRequestException("Seules les ventes PENDING peuvent être confirmées");
     }
-
-    // Vérifier et décrémenter le stock
     for (SaleDetail detail : sale.getSaleDetails()) {
       BookFormat format = detail.getBookFormat();
       int available = format.getStock();
@@ -106,6 +105,8 @@ public class SaleService {
       }
       format.setStock(available - requested);
       bookFormatRepository.save(format);
+      stockMovementService.record(
+          format, StockMovement.MovementType.SALE, -requested, sale.getId());
     }
 
     sale.setStatus(Sale.SaleStatus.DONE);
@@ -122,7 +123,6 @@ public class SaleService {
     return saleRepository.save(sale);
   }
 
-  // DTO interne pour la création
   public record SaleItemRequest(String formatId, int quantity) {
     public String getFormatId() {
       return formatId;

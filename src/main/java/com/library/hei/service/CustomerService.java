@@ -37,4 +37,8 @@ public class CustomerService {
     customerRepository.deleteById(id);
     return c;
   }
+
+  public List<Customer> searchByLastName(String lastName) {
+    return customerRepository.findByLastNameContainingIgnoreCase(lastName);
+  }
 }

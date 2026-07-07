@@ -1,11 +1,10 @@
 package com.library.hei.endpoint.rest.controller.health;
 
-import com.library.hei.entity.Genre;
+import com.library.hei.model.entity.Genre;
 import com.library.hei.service.GenreService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/genres")
@@ -20,36 +19,32 @@ public class GenreController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public Genre createGenre(@RequestBody Genre genre) {
-    return genreService.createGenre(genre);
+    return genreService.crupdate(null, genre);
   }
 
   @GetMapping("/{id}")
-  public Genre getGenreById(@PathVariable Long id) {
-    return genreService
-        .getGenreById(id)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Genre not found"));
+  public Genre getGenreById(@PathVariable String id) {
+    return genreService.getById(id);
   }
 
   @GetMapping
   public List<Genre> getAllGenres() {
-    return genreService.getAllGenres();
+    return genreService.getAll();
   }
 
   @GetMapping("/search")
   public Genre getGenreByName(@RequestParam String name) {
-    return genreService
-        .getGenreByName(name)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Genre not found"));
+    return genreService.getByName(name);
   }
 
   @PutMapping("/{id}")
-  public Genre updateGenre(@PathVariable Long id, @RequestBody Genre genre) {
-    return genreService.updateGenre(id, genre);
+  public Genre updateGenre(@PathVariable String id, @RequestBody Genre genre) {
+    return genreService.crupdate(id, genre);
   }
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void deleteGenre(@PathVariable Long id) {
-    genreService.deleteGenre(id);
+  public void deleteGenre(@PathVariable String id) {
+    genreService.delete(id);
   }
 }

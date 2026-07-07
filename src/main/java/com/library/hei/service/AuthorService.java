@@ -37,4 +37,8 @@ public class AuthorService {
     authorRepository.deleteById(id);
     return author;
   }
+
+  public List<Author> searchByLastName(String lastName) {
+    return authorRepository.findByLastNameContainingIgnoreCase(lastName);
+  }
 }
