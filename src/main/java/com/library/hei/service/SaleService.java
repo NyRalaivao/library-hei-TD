@@ -30,13 +30,13 @@ public class SaleService {
 
   public List<Sale> getRecentSales(int limit) {
     return saleRepository.findByStatusOrderBySaleDateDesc(
-            Sale.SaleStatus.DONE, PageRequest.of(0, limit));
+        Sale.SaleStatus.DONE, PageRequest.of(0, limit));
   }
 
   public Sale getById(String id) {
     return saleRepository
-            .findById(id)
-            .orElseThrow(() -> new NotFoundException("Vente id=" + id + " introuvable"));
+        .findById(id)
+        .orElseThrow(() -> new NotFoundException("Vente id=" + id + " introuvable"));
   }
 
   public List<Sale> getAll() {
@@ -46,40 +46,40 @@ public class SaleService {
   @Transactional
   public Sale createSale(String customerId, String sellerId, List<SaleItemRequest> items) {
     Customer customer =
-            customerRepository
-                    .findById(customerId)
-                    .orElseThrow(() -> new NotFoundException("Client id=" + customerId + " introuvable"));
+        customerRepository
+            .findById(customerId)
+            .orElseThrow(() -> new NotFoundException("Client id=" + customerId + " introuvable"));
     User seller =
-            userRepository
-                    .findById(sellerId)
-                    .orElseThrow(() -> new NotFoundException("Vendeur id=" + sellerId + " introuvable"));
+        userRepository
+            .findById(sellerId)
+            .orElseThrow(() -> new NotFoundException("Vendeur id=" + sellerId + " introuvable"));
 
     Sale sale =
-            Sale.builder()
-                    .customer(customer)
-                    .seller(seller)
-                    .saleDate(LocalDateTime.now())
-                    .status(Sale.SaleStatus.PENDING)
-                    .totalAmount(BigDecimal.ZERO)
-                    .saleDetails(new ArrayList<>())
-                    .build();
+        Sale.builder()
+            .customer(customer)
+            .seller(seller)
+            .saleDate(LocalDateTime.now())
+            .status(Sale.SaleStatus.PENDING)
+            .totalAmount(BigDecimal.ZERO)
+            .saleDetails(new ArrayList<>())
+            .build();
 
     BigDecimal total = BigDecimal.ZERO;
     for (SaleItemRequest item : items) {
       BookFormat format =
-              bookFormatRepository
-                      .findById(item.getFormatId())
-                      .orElseThrow(
-                              () -> new NotFoundException("Format id=" + item.getFormatId() + " introuvable"));
+          bookFormatRepository
+              .findById(item.getFormatId())
+              .orElseThrow(
+                  () -> new NotFoundException("Format id=" + item.getFormatId() + " introuvable"));
 
       SaleDetail detail =
-              SaleDetail.builder()
-                      .sale(sale)
-                      .bookFormat(format)
-                      .quantity(item.getQuantity())
-                      .unitPrice(format.getPrice())
-                      .totalPrice(format.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                      .build();
+          SaleDetail.builder()
+              .sale(sale)
+              .bookFormat(format)
+              .quantity(item.getQuantity())
+              .unitPrice(format.getPrice())
+              .totalPrice(format.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+              .build();
 
       sale.getSaleDetails().add(detail);
       total = total.add(detail.getTotalPrice());
@@ -106,7 +106,7 @@ public class SaleService {
       format.setStock(available - requested);
       bookFormatRepository.save(format);
       stockMovementService.record(
-              format, StockMovement.MovementType.SALE, -requested, sale.getId());
+          format, StockMovement.MovementType.SALE, -requested, sale.getId());
     }
 
     sale.setStatus(Sale.SaleStatus.DONE);
