@@ -35,4 +35,10 @@ public class GenreService {
     genreRepository.deleteById(id);
     return genre;
   }
+
+  public Genre getByName(String name) {
+    return genreRepository
+        .findByNameIgnoreCase(name)
+        .orElseThrow(() -> new NotFoundException("Genre nom=" + name + " introuvable"));
+  }
 }
