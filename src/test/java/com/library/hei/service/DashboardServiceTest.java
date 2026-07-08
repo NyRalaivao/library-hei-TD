@@ -25,6 +25,7 @@ class DashboardServiceTest {
   @Mock private SaleRepository saleRepository;
   @Mock private SaleDetailRepository saleDetailRepository;
   @Mock private BookFormatRepository bookFormatRepository;
+  @Mock private GenreRepository genreRepository;
 
   @InjectMocks private DashboardService dashboardService;
 
@@ -33,10 +34,13 @@ class DashboardServiceTest {
   private BookFormat lowStockFormat;
   private BookFormat okStockFormat;
   private Book book;
+  private Genre genre;
 
   @BeforeEach
   void setUp() {
     book = Book.builder().id("book-1").title("Les Misérables").price(BigDecimal.TEN).build();
+
+    genre = Genre.builder().id("genre-1").name("Roman").build();
 
     lowStockFormat =
         BookFormat.builder()
@@ -80,8 +84,6 @@ class DashboardServiceTest {
             .build();
   }
 
-  // ─── getCurrentMonthRevenue ───────────────────────────────────────────────
-
   @Test
   void getCurrentMonthRevenue_returnsRepositoryValue() {
     when(saleRepository.sumCurrentMonthRevenue()).thenReturn(new BigDecimal("1500.00"));
@@ -101,8 +103,6 @@ class DashboardServiceTest {
     assertEquals(BigDecimal.ZERO, result);
   }
 
-  // ─── getPendingSales ──────────────────────────────────────────────────────
-
   @Test
   void getPendingSales_returnsOnlyPending() {
     when(saleRepository.findByStatus(Sale.SaleStatus.PENDING)).thenReturn(List.of(pendingSale));
@@ -119,8 +119,6 @@ class DashboardServiceTest {
     assertTrue(dashboardService.getPendingSales().isEmpty());
   }
 
-  // ─── getRecentSales ───────────────────────────────────────────────────────
-
   @Test
   void getRecentSales_returnsOnlyDone() {
     when(saleRepository.findByStatusOrderBySaleDateDesc(
@@ -132,8 +130,6 @@ class DashboardServiceTest {
     assertEquals(1, result.size());
     assertEquals(Sale.SaleStatus.DONE, result.get(0).getStatus());
   }
-
-  // ─── getLowStockBooks ─────────────────────────────────────────────────────
 
   @Test
   void getLowStockBooks_returnsOnlyBelowThreshold() {
@@ -161,8 +157,6 @@ class DashboardServiceTest {
     assertTrue(result.stream().noneMatch(m -> (int) m.get("stock") > 3));
   }
 
-  // ─── getBestSellers ───────────────────────────────────────────────────────
-
   @Test
   void getBestSellers_returnsRankedList() {
     Object[] row = new Object[] {book, 42L};
@@ -182,12 +176,11 @@ class DashboardServiceTest {
     assertTrue(dashboardService.getBestSellers(5).isEmpty());
   }
 
-  // ─── getRevenueByGenre ────────────────────────────────────────────────────
-
   @Test
   void getRevenueByGenre_returnsGenreRevenuePairs() {
     Object[] row = new Object[] {"Roman", new BigDecimal("850.00")};
     when(saleDetailRepository.findRevenueByGenre()).thenReturn(Collections.singletonList(row));
+    when(genreRepository.findAll()).thenReturn(List.of(genre));
 
     List<Map<String, Object>> result = dashboardService.getRevenueByGenre();
 
@@ -199,26 +192,68 @@ class DashboardServiceTest {
   @Test
   void getRevenueByGenre_emptyWhenNoSales() {
     when(saleDetailRepository.findRevenueByGenre()).thenReturn(List.of());
-    assertTrue(dashboardService.getRevenueByGenre().isEmpty());
+    when(genreRepository.findAll()).thenReturn(List.of(genre));
+
+    List<Map<String, Object>> result = dashboardService.getRevenueByGenre();
+
+    assertEquals(1, result.size());
+    assertEquals("Roman", result.get(0).get("genre"));
+    assertEquals(BigDecimal.ZERO, result.get(0).get("revenue"));
   }
-    @Test
-    void getStockByBookAndEdition_returnsOneRowPerFormat() {
-        when(bookFormatRepository.findAllWithBookOrderByBookTitle())
-                .thenReturn(List.of(lowStockFormat, okStockFormat));
 
-        List<Map<String, Object>> result = dashboardService.getStockByBookAndEdition();
+  @Test
+  void getRevenueByGenre_multipleGenres() {
+    Genre genre2 = Genre.builder().id("genre-2").name("Science-Fiction").build();
 
-        assertEquals(2, result.size());
-        assertEquals("Les Misérables", result.get(0).get("title"));
-        assertEquals("fmt-1", result.get(0).get("formatId"));
-        assertEquals(2, result.get(0).get("stock"));
-        assertEquals("fmt-2", result.get(1).get("formatId"));
-        assertEquals(15, result.get(1).get("stock"));
-    }
+    Object[] row1 = new Object[] {"Roman", new BigDecimal("850.00")};
+    Object[] row2 = new Object[] {"Science-Fiction", new BigDecimal("420.00")};
+    when(saleDetailRepository.findRevenueByGenre()).thenReturn(List.of(row1, row2));
+    when(genreRepository.findAll()).thenReturn(List.of(genre, genre2));
 
-    @Test
-    void getStockByBookAndEdition_emptyWhenNoFormats() {
-        when(bookFormatRepository.findAllWithBookOrderByBookTitle()).thenReturn(List.of());
-        assertTrue(dashboardService.getStockByBookAndEdition().isEmpty());
-    }
+    List<Map<String, Object>> result = dashboardService.getRevenueByGenre();
+
+    assertEquals(2, result.size());
+    assertEquals("Roman", result.get(0).get("genre"));
+    assertEquals(new BigDecimal("850.00"), result.get(0).get("revenue"));
+    assertEquals("Science-Fiction", result.get(1).get("genre"));
+    assertEquals(new BigDecimal("420.00"), result.get(1).get("revenue"));
+  }
+
+  @Test
+  void getRevenueByGenre_genreWithoutSales() {
+    Genre genre2 = Genre.builder().id("genre-2").name("Science-Fiction").build();
+
+    Object[] row = new Object[] {"Roman", new BigDecimal("850.00")};
+    when(saleDetailRepository.findRevenueByGenre()).thenReturn(Collections.singletonList(row));
+    when(genreRepository.findAll()).thenReturn(List.of(genre, genre2));
+
+    List<Map<String, Object>> result = dashboardService.getRevenueByGenre();
+
+    assertEquals(2, result.size());
+    assertEquals("Roman", result.get(0).get("genre"));
+    assertEquals(new BigDecimal("850.00"), result.get(0).get("revenue"));
+    assertEquals("Science-Fiction", result.get(1).get("genre"));
+    assertEquals(BigDecimal.ZERO, result.get(1).get("revenue"));
+  }
+
+  @Test
+  void getStockByBookAndEdition_returnsOneRowPerFormat() {
+    when(bookFormatRepository.findAllWithBookOrderByBookTitle())
+        .thenReturn(List.of(lowStockFormat, okStockFormat));
+
+    List<Map<String, Object>> result = dashboardService.getStockByBookAndEdition();
+
+    assertEquals(2, result.size());
+    assertEquals("Les Misérables", result.get(0).get("title"));
+    assertEquals("fmt-1", result.get(0).get("formatId"));
+    assertEquals(2, result.get(0).get("stock"));
+    assertEquals("fmt-2", result.get(1).get("formatId"));
+    assertEquals(15, result.get(1).get("stock"));
+  }
+
+  @Test
+  void getStockByBookAndEdition_emptyWhenNoFormats() {
+    when(bookFormatRepository.findAllWithBookOrderByBookTitle()).thenReturn(List.of());
+    assertTrue(dashboardService.getStockByBookAndEdition().isEmpty());
+  }
 }
