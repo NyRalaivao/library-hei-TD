@@ -3,6 +3,7 @@ package com.library.hei.service;
 import com.library.hei.model.entity.Book;
 import com.library.hei.model.entity.Sale;
 import com.library.hei.repository.BookFormatRepository;
+import com.library.hei.repository.GenreRepository;
 import com.library.hei.repository.SaleDetailRepository;
 import com.library.hei.repository.SaleRepository;
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ public class DashboardService {
     private final SaleRepository saleRepository;
     private final SaleDetailRepository saleDetailRepository;
     private final BookFormatRepository bookFormatRepository;
+    private final GenreRepository genreRepository;
 
     public BigDecimal getCurrentMonthRevenue() {
         BigDecimal revenue = saleRepository.sumCurrentMonthRevenue();
@@ -62,6 +64,21 @@ public class DashboardService {
                 .toList();
     }
 
+    public List<Map<String, Object>> getStockByBook() {
+        return bookFormatRepository.sumStockGroupByBook().stream()
+                .map(
+                        row -> {
+                            Book book = (Book) row[0];
+                            Long totalStock = ((Number) row[1]).longValue();
+                            Map<String, Object> m = new LinkedHashMap<>();
+                            m.put("bookId", book.getId());
+                            m.put("title", book.getTitle());
+                            m.put("totalStock", totalStock);
+                            return m;
+                        })
+                .toList();
+    }
+
     public List<Map<String, Object>> getStockByBookAndEdition() {
         return bookFormatRepository.findAllWithBookOrderByBookTitle().stream()
                 .map(
@@ -78,12 +95,19 @@ public class DashboardService {
     }
 
     public List<Map<String, Object>> getRevenueByGenre() {
-        return saleDetailRepository.findRevenueByGenre().stream()
+        Map<String, BigDecimal> revenueByGenreName = new HashMap<>();
+        for (Object[] row : saleDetailRepository.findRevenueByGenre()) {
+            revenueByGenreName.put((String) row[0], (BigDecimal) row[1]);
+        }
+
+        return genreRepository.findAll().stream()
                 .map(
-                        row -> {
+                        genre -> {
                             Map<String, Object> m = new LinkedHashMap<>();
-                            m.put("genre", row[0]);
-                            m.put("revenue", row[1]);
+                            m.put("genre", genre.getName());
+                            m.put(
+                                    "revenue",
+                                    revenueByGenreName.getOrDefault(genre.getName(), BigDecimal.ZERO));
                             return m;
                         })
                 .toList();
