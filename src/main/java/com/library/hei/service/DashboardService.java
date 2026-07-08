@@ -16,100 +16,98 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class DashboardService {
 
-    private final SaleRepository saleRepository;
-    private final SaleDetailRepository saleDetailRepository;
-    private final BookFormatRepository bookFormatRepository;
-    private final GenreRepository genreRepository;
+  private final SaleRepository saleRepository;
+  private final SaleDetailRepository saleDetailRepository;
+  private final BookFormatRepository bookFormatRepository;
+  private final GenreRepository genreRepository;
 
-    public BigDecimal getCurrentMonthRevenue() {
-        BigDecimal revenue = saleRepository.sumCurrentMonthRevenue();
-        return revenue != null ? revenue : BigDecimal.ZERO;
+  public BigDecimal getCurrentMonthRevenue() {
+    BigDecimal revenue = saleRepository.sumCurrentMonthRevenue();
+    return revenue != null ? revenue : BigDecimal.ZERO;
+  }
+
+  public List<Sale> getPendingSales() {
+    return saleRepository.findByStatus(Sale.SaleStatus.PENDING);
+  }
+
+  public List<Sale> getRecentSales(int limit) {
+    return saleRepository.findByStatusOrderBySaleDateDesc(
+        Sale.SaleStatus.DONE, PageRequest.of(0, limit));
+  }
+
+  public List<Map<String, Object>> getLowStockBooks(int threshold) {
+    return bookFormatRepository.findByStockLessThanEqual(threshold).stream()
+        .map(
+            f -> {
+              Map<String, Object> m = new LinkedHashMap<>();
+              m.put("bookId", f.getBook().getId());
+              m.put("title", f.getBook().getTitle());
+              m.put("coverType", f.getCoverType());
+              m.put("stock", f.getStock());
+              return m;
+            })
+        .toList();
+  }
+
+  public List<Map<String, Object>> getBestSellers(int limit) {
+    return saleDetailRepository.findBestSellers(PageRequest.of(0, limit)).stream()
+        .map(
+            row -> {
+              Book book = (Book) row[0];
+              Long totalSold = ((Number) row[1]).longValue();
+              Map<String, Object> m = new LinkedHashMap<>();
+              m.put("bookId", book.getId());
+              m.put("title", book.getTitle());
+              m.put("totalSold", totalSold);
+              return m;
+            })
+        .toList();
+  }
+
+  public List<Map<String, Object>> getStockByBook() {
+    return bookFormatRepository.sumStockGroupByBook().stream()
+        .map(
+            row -> {
+              Book book = (Book) row[0];
+              Long totalStock = ((Number) row[1]).longValue();
+              Map<String, Object> m = new LinkedHashMap<>();
+              m.put("bookId", book.getId());
+              m.put("title", book.getTitle());
+              m.put("totalStock", totalStock);
+              return m;
+            })
+        .toList();
+  }
+
+  public List<Map<String, Object>> getStockByBookAndEdition() {
+    return bookFormatRepository.findAllWithBookOrderByBookTitle().stream()
+        .map(
+            f -> {
+              Map<String, Object> m = new LinkedHashMap<>();
+              m.put("bookId", f.getBook().getId());
+              m.put("title", f.getBook().getTitle());
+              m.put("formatId", f.getId());
+              m.put("coverType", f.getCoverType());
+              m.put("stock", f.getStock());
+              return m;
+            })
+        .toList();
+  }
+
+  public List<Map<String, Object>> getRevenueByGenre() {
+    Map<String, BigDecimal> revenueByGenreName = new HashMap<>();
+    for (Object[] row : saleDetailRepository.findRevenueByGenre()) {
+      revenueByGenreName.put((String) row[0], (BigDecimal) row[1]);
     }
 
-    public List<Sale> getPendingSales() {
-        return saleRepository.findByStatus(Sale.SaleStatus.PENDING);
-    }
-
-    public List<Sale> getRecentSales(int limit) {
-        return saleRepository.findByStatusOrderBySaleDateDesc(
-                Sale.SaleStatus.DONE, PageRequest.of(0, limit));
-    }
-
-    public List<Map<String, Object>> getLowStockBooks(int threshold) {
-        return bookFormatRepository.findByStockLessThanEqual(threshold).stream()
-                .map(
-                        f -> {
-                            Map<String, Object> m = new LinkedHashMap<>();
-                            m.put("bookId", f.getBook().getId());
-                            m.put("title", f.getBook().getTitle());
-                            m.put("coverType", f.getCoverType());
-                            m.put("stock", f.getStock());
-                            return m;
-                        })
-                .toList();
-    }
-
-    public List<Map<String, Object>> getBestSellers(int limit) {
-        return saleDetailRepository.findBestSellers(PageRequest.of(0, limit)).stream()
-                .map(
-                        row -> {
-                            Book book = (Book) row[0];
-                            Long totalSold = ((Number) row[1]).longValue();
-                            Map<String, Object> m = new LinkedHashMap<>();
-                            m.put("bookId", book.getId());
-                            m.put("title", book.getTitle());
-                            m.put("totalSold", totalSold);
-                            return m;
-                        })
-                .toList();
-    }
-
-    public List<Map<String, Object>> getStockByBook() {
-        return bookFormatRepository.sumStockGroupByBook().stream()
-                .map(
-                        row -> {
-                            Book book = (Book) row[0];
-                            Long totalStock = ((Number) row[1]).longValue();
-                            Map<String, Object> m = new LinkedHashMap<>();
-                            m.put("bookId", book.getId());
-                            m.put("title", book.getTitle());
-                            m.put("totalStock", totalStock);
-                            return m;
-                        })
-                .toList();
-    }
-
-    public List<Map<String, Object>> getStockByBookAndEdition() {
-        return bookFormatRepository.findAllWithBookOrderByBookTitle().stream()
-                .map(
-                        f -> {
-                            Map<String, Object> m = new LinkedHashMap<>();
-                            m.put("bookId", f.getBook().getId());
-                            m.put("title", f.getBook().getTitle());
-                            m.put("formatId", f.getId());
-                            m.put("coverType", f.getCoverType());
-                            m.put("stock", f.getStock());
-                            return m;
-                        })
-                .toList();
-    }
-
-    public List<Map<String, Object>> getRevenueByGenre() {
-        Map<String, BigDecimal> revenueByGenreName = new HashMap<>();
-        for (Object[] row : saleDetailRepository.findRevenueByGenre()) {
-            revenueByGenreName.put((String) row[0], (BigDecimal) row[1]);
-        }
-
-        return genreRepository.findAll().stream()
-                .map(
-                        genre -> {
-                            Map<String, Object> m = new LinkedHashMap<>();
-                            m.put("genre", genre.getName());
-                            m.put(
-                                    "revenue",
-                                    revenueByGenreName.getOrDefault(genre.getName(), BigDecimal.ZERO));
-                            return m;
-                        })
-                .toList();
-    }
+    return genreRepository.findAll().stream()
+        .map(
+            genre -> {
+              Map<String, Object> m = new LinkedHashMap<>();
+              m.put("genre", genre.getName());
+              m.put("revenue", revenueByGenreName.getOrDefault(genre.getName(), BigDecimal.ZERO));
+              return m;
+            })
+        .toList();
+  }
 }
