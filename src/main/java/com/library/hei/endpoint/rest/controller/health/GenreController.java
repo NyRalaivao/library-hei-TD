@@ -10,41 +10,36 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/genres")
 public class GenreController {
 
-  private final GenreService genreService;
+    private final GenreService genreService;
 
-  public GenreController(GenreService genreService) {
-    this.genreService = genreService;
-  }
+    public GenreController(GenreService genreService) {
+        this.genreService = genreService;
+    }
 
-  @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
-  public Genre createGenre(@RequestBody Genre genre) {
-    return genreService.crupdate(null, genre);
-  }
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Genre createGenre(@RequestBody Genre genre) {
+        return genreService.crupdate(null, genre);
+    }
 
-  @GetMapping("/{id}")
-  public Genre getGenreById(@PathVariable String id) {
-    return genreService.getById(id);
-  }
+    @GetMapping("/{id}")
+    public Genre getGenreById(@PathVariable String id) {
+        return genreService.getById(id);
+    }
 
-  @GetMapping
-  public List<Genre> getAllGenres() {
-    return genreService.getAll();
-  }
+    @GetMapping
+    public List<Genre> getAllGenres() {
+        return genreService.getAll();
+    }
 
-  @GetMapping("/search")
-  public Genre getGenreByName(@RequestParam String name) {
-    return genreService.getByName(name);
-  }
+    @PutMapping("/{id}")
+    public Genre updateGenre(@PathVariable String id, @RequestBody Genre genre) {
+        return genreService.crupdate(id, genre);
+    }
 
-  @PutMapping("/{id}")
-  public Genre updateGenre(@PathVariable String id, @RequestBody Genre genre) {
-    return genreService.crupdate(id, genre);
-  }
-
-  @DeleteMapping("/{id}")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void deleteGenre(@PathVariable String id) {
-    genreService.delete(id);
-  }
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteGenre(@PathVariable String id) {
+        genreService.delete(id);
+    }
 }

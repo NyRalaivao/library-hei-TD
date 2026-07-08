@@ -201,4 +201,24 @@ class DashboardServiceTest {
     when(saleDetailRepository.findRevenueByGenre()).thenReturn(List.of());
     assertTrue(dashboardService.getRevenueByGenre().isEmpty());
   }
+    @Test
+    void getStockByBookAndEdition_returnsOneRowPerFormat() {
+        when(bookFormatRepository.findAllWithBookOrderByBookTitle())
+                .thenReturn(List.of(lowStockFormat, okStockFormat));
+
+        List<Map<String, Object>> result = dashboardService.getStockByBookAndEdition();
+
+        assertEquals(2, result.size());
+        assertEquals("Les Misérables", result.get(0).get("title"));
+        assertEquals("fmt-1", result.get(0).get("formatId"));
+        assertEquals(2, result.get(0).get("stock"));
+        assertEquals("fmt-2", result.get(1).get("formatId"));
+        assertEquals(15, result.get(1).get("stock"));
+    }
+
+    @Test
+    void getStockByBookAndEdition_emptyWhenNoFormats() {
+        when(bookFormatRepository.findAllWithBookOrderByBookTitle()).thenReturn(List.of());
+        assertTrue(dashboardService.getStockByBookAndEdition().isEmpty());
+    }
 }
