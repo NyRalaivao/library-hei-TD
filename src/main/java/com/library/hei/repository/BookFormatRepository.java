@@ -14,4 +14,8 @@ public interface BookFormatRepository extends JpaRepository<BookFormat, String> 
 
     @Query("SELECT f FROM BookFormat f JOIN FETCH f.book b ORDER BY b.title ASC, f.coverType ASC")
     List<BookFormat> findAllWithBookOrderByBookTitle();
+
+    @Query(
+            "SELECT f.book, SUM(f.stock) FROM BookFormat f GROUP BY f.book ORDER BY f.book.title ASC")
+    List<Object[]> sumStockGroupByBook();
 }
