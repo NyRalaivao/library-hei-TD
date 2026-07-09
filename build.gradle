@@ -39,6 +39,9 @@ configurations {
 
 
 
+
+
+
 test {
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
     useJUnitPlatform()
@@ -110,6 +113,8 @@ jacocoTestReport {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web:3.2.2'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.2.2'
+    runtimeOnly 'org.postgresql:postgresql:42.7.3'
     testImplementation 'org.testcontainers:testcontainers:2.0.2'
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
@@ -131,6 +136,9 @@ dependencies {
     // Génération de PDF (tickets de vente)
     implementation 'org.apache.pdfbox:pdfbox:2.0.31'
 
+    // Génération de PDF (tickets de vente)
+    implementation 'org.apache.pdfbox:pdfbox:2.0.31'
+
     implementation 'jakarta.mail:jakarta.mail-api:2.1.2'
     implementation 'jakarta.activation:jakarta.activation-api:2.1.2'
     implementation 'com.sun.mail:jakarta.mail:2.0.1'
@@ -140,10 +148,10 @@ dependencies {
 
     implementation 'org.reflections:reflections:0.10.2'
 
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    testCompileOnly 'org.projectlombok:lombok:1.18.30'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly 'org.projectlombok:lombok:1.18.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
+    testCompileOnly 'org.projectlombok:lombok:1.18.36'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
 
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
     implementation 'io.swagger:swagger-annotations:1.6.12'
@@ -151,7 +159,5 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.2'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.2'
     testImplementation 'org.junit-pioneer:junit-pioneer:2.2.0'
-
-
 
 }

@@ -1,20 +1,23 @@
 package com.library.hei.storage;
 
 import com.library.hei.PojaGenerated;
-import com.library.hei.conf.BucketConf;
+import com.library.hei.file.bucket.BucketComponent;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.time.Duration;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 /**
  * Dépose un fichier (ex : ticket PDF) sur le bucket S3 configuré et retourne un lien de
  * téléchargement temporaire (URL présignée), sans rendre le bucket public.
+ *
+ * <p>Réutilise le composant {@link BucketComponent} déjà généré/testé pour l'upload et le
+ * présignage, plutôt que de dupliquer une configuration S3 (voir historique : la précédente
+ * implémentation redéfinissait son propre {@code BucketConf} avec un {@code @Value} sur un type
+ * {@code Region}, ce que Spring ne sait pas convertir — d'où le crash au démarrage).
  */
 @PojaGenerated
 @Component
@@ -23,34 +26,30 @@ public class TicketStorage {
 
   private static final Duration DOWNLOAD_LINK_VALIDITY = Duration.ofDays(7);
 
-  private final S3Client s3Client;
-  private final S3Presigner s3Presigner;
-  private final BucketConf bucketConf;
+  private final BucketComponent bucketComponent;
 
   /**
    * Envoie {@code content} sous la clé {@code key} dans le bucket configuré, puis retourne un lien
    * de téléchargement valable {@link #DOWNLOAD_LINK_VALIDITY}.
    */
   public String upload(String key, byte[] content) {
-    s3Client.putObject(
-        PutObjectRequest.builder()
-            .bucket(bucketConf.getBucketName())
-            .key(key)
-            .contentType("application/pdf")
-            .build(),
-        RequestBody.fromBytes(content));
-
-    return presignDownloadUrl(key);
+    File tempFile = writeToTempFile(content);
+    try {
+      bucketComponent.upload(tempFile, key);
+      return bucketComponent.presign(key, DOWNLOAD_LINK_VALIDITY).toString();
+    } finally {
+      tempFile.delete();
+    }
   }
 
-  private String presignDownloadUrl(String key) {
-    var presignRequest =
-        GetObjectPresignRequest.builder()
-            .signatureDuration(DOWNLOAD_LINK_VALIDITY)
-            .getObjectRequest(
-                GetObjectRequest.builder().bucket(bucketConf.getBucketName()).key(key).build())
-            .build();
-
-    return s3Presigner.presignGetObject(presignRequest).url().toString();
+  private File writeToTempFile(byte[] content) {
+    try {
+      File tempFile = File.createTempFile("ticket-", ".pdf");
+      Files.write(tempFile.toPath(), content);
+      tempFile.deleteOnExit();
+      return tempFile;
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 }
