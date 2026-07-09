@@ -25,6 +25,8 @@ public class Customer {
   @Column(name = "last_name", nullable = false)
   private String lastName;
 
+  @Column private String email;
+
   @JsonIgnore
   @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
   @Builder.Default
